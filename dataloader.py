@@ -16,14 +16,14 @@ CHROMA_PATH = "chroma"
 DATA_PATH = "./Data"
 
 
-# def main():
-#     generate_data_store()
+def main():
+    generate_data_store()
 
 
-# def generate_data_store():
-#     documents = load_documents()
-#     chunks = split_text(documents)
-#     save_to_chroma(chunks)
+def generate_data_store():
+    documents = load_documents()
+    chunks = split_text(documents)
+    save_to_chroma(chunks)
 
 
 def load_documents():
@@ -65,8 +65,5 @@ def save_to_chroma(chunks: list[Document]):
     print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
 
 
-save_to_chroma(split_text(load_documents()))
-
-
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
