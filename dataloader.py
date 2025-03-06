@@ -9,61 +9,62 @@ import os
 import shutil
 
 
-load_dotenv()
-openai.api_key = os.environ['OPENAI_API_KEY']
 
-CHROMA_PATH = "chroma"
-DATA_PATH = "./Data"
-
-
-def main():
-    generate_data_store()
+class Dataloader:
+    _CHROMA_PATH = "chroma"
+    _DATA_PATH = "./Data"
 
 
-def generate_data_store():
-    documents = load_documents()
-    chunks = split_text(documents)
-    save_to_chroma(chunks)
+    def __init__(self):
+        load_dotenv()
+        openai.api_key = os.environ['OPENAI_API_KEY']
+    
+
+    def load_data(self):
+        documents = self._load_documents()
+        chunks = self._split_text(documents)
+        self._save_to_chroma(chunks)
+    
+
+    def _load_documents(self):
+        loader = DirectoryLoader(self._DATA_PATH, glob="*.md")
+        documents = loader.load()
+
+        return documents
 
 
-def load_documents():
-    loader = DirectoryLoader(DATA_PATH, glob="*.md")
-    documents = loader.load()
+    def _split_text(self, documents: list[Document]):
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=300,
+            chunk_overlap=100,
+            length_function=len,
+            add_start_index=True,
+        )
 
-    return documents
+        chunks = text_splitter.split_documents(documents)
+        print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
+        document = chunks[10]
+        print(document.page_content)
+        print(document.metadata)
 
-def split_text(documents: list[Document]):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
-        chunk_overlap=100,
-        length_function=len,
-        add_start_index=True,
-    )
-
-    chunks = text_splitter.split_documents(documents)
-    print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
-
-    document = chunks[10]
-    print(document.page_content)
-    print(document.metadata)
-
-    return chunks
+        return chunks
 
 
-def save_to_chroma(chunks: list[Document]):
-    # Clear out the database first.
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
+    def _save_to_chroma(self, chunks: list[Document]):
+        # Clear out the database first.
+        if os.path.exists(self._CHROMA_PATH):
+            shutil.rmtree(self._CHROMA_PATH)
 
-    # Create a new DB from the documents.
-    db = Chroma.from_documents(
-        chunks, OpenAIEmbeddings(), persist_directory=CHROMA_PATH
-    )
+        # Create a new DB from the documents.
+        db = Chroma.from_documents(
+            chunks, OpenAIEmbeddings(), persist_directory=self._CHROMA_PATH
+        )
 
-    db.persist()
-    print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
+        db.persist()
+        print(f"Saved {len(chunks)} chunks to {self._CHROMA_PATH}.")
 
 
 if __name__ == "__main__":
-    main()
+    dataloader = Dataloader()
+    dataloader.load_data()
